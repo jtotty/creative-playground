@@ -1,16 +1,10 @@
 ---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import NuxtEffect from '../components/NuxtEffect.astro';
+
 const pageTitle = "James's Creative Playground";
 ---
 
-<html lang="en-gb">
-    <head>
-        <meta charset="utf-8" />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <meta name="viewport" content="width=device-width" />
-        <meta name="generator" content={Astro.generator} />
-        <title>{pageTitle}</title>
-    </head>
-    <body>
-        <h1>{pageTitle}</h1>
-    </body>
-</html>
+<BaseLayout pageTitle={pageTitle}>
+    <NuxtEffect />
+</BaseLayout>
