@@ -9,65 +9,86 @@
     </div>
 </section>
 
-<script>
-const section = document.getElementById('nuxt-effect');
-const containerEl = section.querySelector('.container');
-const imageEl = containerEl.querySelector('#logo');
-const glow = containerEl.querySelector('#glow');
+<script>import { Image } from "astro:assets";
+
+const section = document.getElementById('nuxt-effect')!;
+const containerEl = section.querySelector<HTMLDivElement>('.container')!;
+const imageEl = containerEl.querySelector<HTMLImageElement>('#logo')!;
+const glow = containerEl.querySelector<HTMLDivElement>('#glow')!;
 
 const imageBCR = imageEl.getBoundingClientRect();
 const containerBCR = containerEl.getBoundingClientRect();
-const left = window.pageXOffset + containerBCR.left;
-const top = window.pageYOffset + containerBCR.top;
+const left = window.scrollX + containerBCR.left;
+const top = window.scrollY + containerBCR.top;
 
 const container = {
     left,
     top,
     center: {
-        x: left + (containerBCR.width / 2),
-        y: top + (containerBCR.height / 2),
+        x: left + Math.floor(containerBCR.width / 2),
+        y: top + Math.floor(containerBCR.height / 2),
     }
 }
 
 // Good ol' Pythagoras
-const distFromCenter = (mouseX, mouseY) => {
+const distFromCenter = (mouseX: number, mouseY: number) => {
     const dist = Math.sqrt(Math.pow(mouseX - container.center.x, 2) + Math.pow(mouseY - container.center.y, 2));
     return Math.floor(dist);
 };
 
+// Variables for the mouse move event
+// Declare outside because we don't want to redeclare them every time the event fires
+// We don't want the GC to have to clean up after every event
+let mouseLeft = 0;
+let mouseTop = 0;
+let dist = 0;
+let glowSize = 0;
+let maskGradient = '';
+let rotateY = 0;
+let rotateX = 0;
+
+const constraint = 13;
+
 section.onmousemove = (event) => {
-    // Offset so that the glow is centered on the mouse
-    const left = event.clientX - container.left;
-    const top = event.clientY - container.top;
+    window.requestAnimationFrame(() => {
+        // Offset so that the glow is centered on the mouse
+        mouseLeft = event.clientX - container.left;
+        mouseTop = event.clientY - container.top;
 
-    glow.style.left = left + 'px';
-    glow.style.top = top + 'px';
+        glow.style.left = mouseLeft + 'px';
+        glow.style.top = mouseTop + 'px';
 
-    // Just need the x and y coordinates of the mouse (no offset)
-    const dist = distFromCenter(event.clientX, event.clientY);
-    const glowSize = Math.max(400 - dist / 3, 100);
-    glow.style.height = glowSize + 'px';
-    glow.style.width = glowSize + 'px';
-    glow.style.transform = `translate(-${glowSize / 2}px, -${glowSize / 2}px)`;
+        // Just need the x and y coordinates of the mouse (no offset)
+        dist = distFromCenter(event.clientX, event.clientY);
+        glowSize = Math.max(300 - dist / 3, 100);
+        glow.style.height = glowSize + 'px';
+        glow.style.width = glowSize + 'px';
+        glow.style.transform = `translate(-${glowSize / 2}px, -${glowSize / 2}px)`;
 
-    glow.style.opacity = Math.max(glowSize / 400, 0.4);
+        glow.style.opacity = Math.max(glowSize / 300, 0.1).toString();
 
-    const maskGradient = `radial-gradient(circle at ${event.clientX - imageBCR.left}px ${event.clientY - imageBCR.top}px, black 5%, transparent 100%)`;
-    imageEl.style.webkitMaskImage = maskGradient;
+        maskGradient = `radial-gradient(circle at ${event.clientX - imageBCR.left}px ${event.clientY - imageBCR.top}px, black 5%, transparent 100%)`;
+        imageEl.style.webkitMaskImage = maskGradient;
+
+        rotateX = -(event.clientY - container.center.y) / constraint;
+        rotateY = (event.clientX - container.center.x) / constraint;
+        imageEl.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    });
 }
 </script>
 
 <style>
 .container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     background-color: #000000;
     overflow: hidden;
+    perspective: 1000px;
 }
 
 .container img {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     height: 300px;
     pointer-events: none;
 }
@@ -82,11 +103,11 @@ section.onmousemove = (event) => {
     height: 200px;
     width: 200px;
 
-    background-color: #3ec4f1;
+    background-color: #fafafa;
     border-radius: 50%;
 
     pointer-events: none;
 
-    filter: blur(50px);
+    filter: blur(70px);
 }
 </style>
